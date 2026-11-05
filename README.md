@@ -45,6 +45,17 @@ approved isolated environment and never disable security software. Raw data is e
 .venv\Scripts\uvicorn securaai_ml.api:app --host 127.0.0.1 --port 8000
 ```
 
+Export the validation-selected Soft Voting model before starting inference:
+
+```powershell
+.venv\Scripts\python.exe scripts\export_selected_model.py
+```
+
+The API applies the locked Validation threshold stored in
+`artifacts/model_metadata.json`; it does not use the estimator's default
+threshold. SecuraAI Backend can consume this endpoint in shadow mode without
+changing its existing alert or incident decisions.
+
 Training writes the fitted pipeline to `artifacts/` and tuning/validation/test metrics, confusion matrix,
 ROC curve and a combined model comparison chart to `reports/`.
 
@@ -55,3 +66,37 @@ feature/training modules so notebook experiments and the deployed artifact follo
 `POST /v1/predict` accepts canonical Windows event fields that SecuraAI can map from a
 normalized Wazuh event. Missing fields remain missing; no fake IP or account is created. The
 returned score is an experimental classifier score, not a calibrated attack probability.
+
+## Build a SecuraAI Wazuh review dataset
+
+Real Wazuh events must be reviewed separately from the public experimental dataset. Exporting
+does not turn Wazuh rules into ground truth: every row starts excluded and without a label.
+
+```powershell
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m securaai_ml.wazuh_review `
+  --backend-env ..\SecuraAI-Backend\.env `
+  --output data\securaai_review\wazuh_review.csv
+```
+
+Review `reviewer_label` as `BENIGN` or `MALICIOUS_APT`, set `include_for_training=true` only
+when evidence is sufficient, and leave uncertain records excluded. `review_suggestion` is a
+queueing aid, never a training label. Validate the edited file with:
+
+```powershell
+.venv\Scripts\python -m securaai_ml.wazuh_review `
+  --validate data\securaai_review\wazuh_review.csv
+```
+
+For a safe controlled Windows lab run, execute `scripts\run_wazuh_lab.ps1`. After Wazuh has
+forwarded all events, export the exact time window and account prefix recorded by its manifest:
+
+```powershell
+.venv\Scripts\python scripts\export_wazuh_lab_run.py `
+  data\securaai_lab\securaai-lab-<id>.json `
+  --backend-env ..\SecuraAI-Backend\.env
+```
+
+Only events matched by both the manifest time window and its random lab-account prefix receive
+the controlled `MALICIOUS_APT` ground truth. A count mismatch fails instead of silently producing
+an incomplete training run.

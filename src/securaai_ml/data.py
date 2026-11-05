@@ -11,7 +11,17 @@ from .schema import GROUP_COLUMN, LABEL_COLUMNS, RAW_COLUMNS, TARGET_COLUMN, Dat
 def _dataset_files(path: Path) -> list[Path]:
     if path.is_file():
         return [path]
-    excluded = {"scenario_manifest.csv", "validation_summary.csv", "log_to_scenario_mapping.csv"}
+    # Prefer the consolidated export when present. Apart from preventing row
+    # duplication, this avoids opening many security-log CSVs on Windows where
+    # endpoint protection may quarantine an individual period file mid-scan.
+    combined = path / "combined.csv"
+    if combined.is_file():
+        return [combined]
+    excluded = {
+        "scenario_manifest.csv",
+        "validation_summary.csv",
+        "log_to_scenario_mapping.csv",
+    }
     files = sorted(item for item in path.glob("*.csv") if item.name not in excluded)
     if not files:
         raise FileNotFoundError(f"No dataset CSV files found under {path}")
@@ -19,8 +29,8 @@ def _dataset_files(path: Path) -> list[Path]:
 
 
 def available_columns(path: Path) -> list[str]:
-    path = _dataset_files(path)[0]
-    return list(pd.read_csv(path, nrows=0, encoding="utf-8-sig").columns)
+    dataset_file = _dataset_files(path)[0]
+    return list(pd.read_csv(dataset_file, nrows=0, encoding="utf-8-sig").columns)
 
 
 def load_training_data(path: Path) -> tuple[pd.DataFrame, DatasetAudit]:
