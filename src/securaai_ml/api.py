@@ -17,11 +17,55 @@ ARTIFACT_DIR = Path(os.getenv("SECURAAI_MODEL_ARTIFACT_DIR", "artifacts"))
 
 
 class PredictionRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    timestamp: str
-    eventFamily: str | None = None
-    eventType: str | None = None
-    eventId: str | int | None = None
+    """A normalized security event and its rolling-window context from SecuraAI."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [
+                {
+                    "timestamp": "2026-11-10T09:15:00Z",
+                    "eventFamily": "authentication",
+                    "eventType": "LOGIN_FAILURE",
+                    "eventId": "4625",
+                    "providerName": "Microsoft-Windows-Security-Auditing",
+                    "channel": "Security",
+                    "severityValue": "AUDIT_FAILURE",
+                    "sourceIp": "203.0.113.25",
+                    "status": "FAILURE",
+                    "events5m": 8,
+                    "failedLogins5m": 7,
+                    "distinctAccounts5m": 1,
+                    "distinctSourceIps5m": 1,
+                    "events1m": 3,
+                    "failures1m": 3,
+                    "events15m": 12,
+                    "failures15m": 9,
+                    "events60m": 20,
+                    "failures60m": 12,
+                }
+            ]
+        },
+    )
+    timestamp: str = Field(
+        description="Event occurrence time in ISO 8601 format, normally UTC.",
+        examples=["2026-11-10T09:15:00Z"],
+    )
+    eventFamily: str | None = Field(
+        default=None,
+        description="Normalized SecuraAI family, such as authentication, app_access, or vpn_sso.",
+        examples=["authentication"],
+    )
+    eventType: str | None = Field(
+        default=None,
+        description="Normalized event type, for example LOGIN_FAILURE or ACCESS_DENIED.",
+        examples=["LOGIN_FAILURE"],
+    )
+    eventId: str | int | None = Field(
+        default=None,
+        description="Source event identifier, such as Windows Event ID 4625.",
+        examples=["4625"],
+    )
     providerName: str | None = None
     channel: str | None = None
     severityValue: str | None = None
@@ -37,37 +81,44 @@ class PredictionRequest(BaseModel):
     parentCommandLinePresent: bool = False
     targetFilePresent: bool = False
     hashesPresent: bool = False
-    sourceIp: str | None = None
-    destinationIp: str | None = None
+    sourceIp: str | None = Field(default=None, description="Observed source IP address.")
+    destinationIp: str | None = Field(default=None, description="Observed destination IP address.")
     sourcePort: int | None = Field(default=None, ge=0, le=65535)
     destinationPort: int | None = Field(default=None, ge=0, le=65535)
     protocol: str | None = None
     status: str | None = None
     subStatus: str | None = None
-    events5m: int = Field(default=1, ge=0)
-    failedLogins5m: int = Field(default=0, ge=0)
-    accessDenials5m: int = Field(default=0, ge=0)
-    vpnFailures5m: int = Field(default=0, ge=0)
-    distinctAccounts5m: int = Field(default=0, ge=0)
-    distinctSourceIps5m: int = Field(default=0, ge=0)
-    successAfterFailure5m: bool = False
-    secondsSincePrevious: float = Field(default=3600, ge=0)
-    events1m: int = Field(default=1, ge=0)
-    failures1m: int = Field(default=0, ge=0)
-    events15m: int = Field(default=1, ge=0)
-    failures15m: int = Field(default=0, ge=0)
-    events60m: int = Field(default=1, ge=0)
-    failures60m: int = Field(default=0, ge=0)
+    events5m: int = Field(default=1, ge=0, description="All related events in the current 5-minute window.")
+    failedLogins5m: int = Field(default=0, ge=0, description="Failed authentication events in the current 5-minute window.")
+    accessDenials5m: int = Field(default=0, ge=0, description="Denied application-access events in the current 5-minute window.")
+    vpnFailures5m: int = Field(default=0, ge=0, description="Failed VPN or SSO events in the current 5-minute window.")
+    distinctAccounts5m: int = Field(default=0, ge=0, description="Distinct accounts observed in the 5-minute window.")
+    distinctSourceIps5m: int = Field(default=0, ge=0, description="Distinct source IP addresses observed in the 5-minute window.")
+    successAfterFailure5m: bool = Field(default=False, description="Whether a successful sign-in followed failures in the same window.")
+    secondsSincePrevious: float = Field(default=3600, ge=0, description="Seconds since the previous related event.")
+    events1m: int = Field(default=1, ge=0, description="All related events in the current 1-minute window.")
+    failures1m: int = Field(default=0, ge=0, description="Failure events in the current 1-minute window.")
+    events15m: int = Field(default=1, ge=0, description="All related events in the current 15-minute window.")
+    failures15m: int = Field(default=0, ge=0, description="Failure events in the current 15-minute window.")
+    events60m: int = Field(default=1, ge=0, description="All related events in the current 60-minute window.")
+    failures60m: int = Field(default=0, ge=0, description="Failure events in the current 60-minute window.")
 
 
 class PredictionResponse(BaseModel):
-    label: str
-    malicious: bool
-    score: float
-    threshold: float
-    escalationThreshold: float
-    scoreSemantics: str
-    modelVersion: str
+    """Decision returned by the trained model for one event context."""
+
+    label: str = Field(description="Model label, normally BENIGN or MALICIOUS_APT.")
+    malicious: bool = Field(description="True when score is greater than or equal to threshold.")
+    score: float = Field(description="Raw model score. Interpret it using scoreSemantics; it is not automatically attack probability.")
+    threshold: float = Field(description="Locked decision threshold used to derive malicious and label.")
+    escalationThreshold: float = Field(description="Score at which SecuraAI may prioritize second-stage security-model review.")
+    scoreSemantics: str = Field(description="Human-readable definition of what score represents for this model artifact.")
+    modelVersion: str = Field(description="Version of the loaded trained-model artifact.")
+
+
+class HealthResponse(BaseModel):
+    status: str = Field(description="Service readiness state.", examples=["ready"])
+    modelVersion: str = Field(description="Version of the model currently loaded.")
 
 
 @lru_cache(maxsize=1)
@@ -79,19 +130,57 @@ def load_artifacts():
     return joblib.load(model_path), json.loads(metadata_path.read_text(encoding="utf-8"))
 
 
-app = FastAPI(title="SecuraAI Windows APT Model", version="0.1.0")
+app = FastAPI(
+    title="SecuraAI Trained Detection Model API",
+    version="0.1.0",
+    summary="Inference API for SecuraAI's independently trained Windows security model.",
+    description=(
+        "This service is called by the SecuraAI backend after Wazuh events are normalized "
+        "and rolling 1/5/15/60-minute context is calculated. It returns the trained model's "
+        "score and threshold decision. It does not ingest Wazuh directly, create alerts, or "
+        "generate the stored natural-language explanation."
+    ),
+    contact={"name": "SecuraAI Project Team"},
+    openapi_tags=[
+        {"name": "Service status", "description": "Check whether the trained artifact is available for inference."},
+        {"name": "Inference", "description": "Score one normalized event together with its temporal context."},
+    ],
+)
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+    tags=["Service status"],
+    summary="Check model readiness",
+    description="Returns 200 only when both the trained model and its metadata can be loaded.",
+    responses={503: {"description": "The model artifact has not been trained, exported, or mounted."}},
+)
+def health() -> HealthResponse:
     try:
         _, metadata = load_artifacts()
     except FileNotFoundError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
-    return {"status": "ready", "modelVersion": metadata["modelVersion"]}
+    return HealthResponse(status="ready", modelVersion=metadata["modelVersion"])
 
 
-@app.post("/v1/predict", response_model=PredictionResponse)
+@app.post(
+    "/v1/predict",
+    response_model=PredictionResponse,
+    tags=["Inference"],
+    summary="Score a normalized security event",
+    description=(
+        "Accepts one normalized Wazuh/SecuraAI event plus counters calculated by the backend "
+        "for 1, 5, 15 and 60-minute windows. The endpoint builds the same features used during "
+        "training, obtains the trained model score, and compares it with the locked threshold. "
+        "SecuraAI's backend remains responsible for second-stage review, alert grouping, storage, "
+        "retry handling and user-facing explanations."
+    ),
+    responses={
+        422: {"description": "The request is missing required fields or contains an invalid value."},
+        503: {"description": "The trained model artifact is unavailable."},
+    },
+)
 def predict(payload: PredictionRequest) -> PredictionResponse:
     try:
         model, metadata = load_artifacts()

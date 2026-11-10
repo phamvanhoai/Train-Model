@@ -16,6 +16,22 @@ def test_health_is_explicit_when_model_has_not_been_trained(tmp_path, monkeypatc
     assert response.json()["detail"] == "Train the model before starting inference"
 
 
+def test_openapi_explains_inference_contract():
+    schema = TestClient(app).get("/openapi.json").json()
+
+    assert "rolling 1/5/15/60-minute context" in schema["info"]["description"]
+    operation = schema["paths"]["/v1/predict"]["post"]
+    assert operation["summary"] == "Score a normalized security event"
+    assert "alert grouping" in operation["description"]
+
+    request_schema = schema["components"]["schemas"]["PredictionRequest"]
+    assert request_schema["examples"][0]["eventType"] == "LOGIN_FAILURE"
+    assert "5-minute window" in request_schema["properties"]["failedLogins5m"]["description"]
+
+    response_schema = schema["components"]["schemas"]["PredictionResponse"]
+    assert "not automatically attack probability" in response_schema["properties"]["score"]["description"]
+
+
 class FixedScoreModel:
     def predict_proba(self, features):
         score = 0.3
