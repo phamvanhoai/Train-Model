@@ -1,12 +1,17 @@
-# SecuraAI Windows APT classifier — experimental model card
+# SecuraAI trained detection models — experimental model card
+
+Trạng thái tài liệu: cập nhật ngày 2026-11-10. Các mục v1–v6 bên dưới là lịch sử thí nghiệm,
+không phải mô tả duy nhất của artifact mới nhất. Candidate temporal mới nhất hiện là
+`securaai-temporal-1m5m15m60m-lab-candidate-v8`.
 
 ## Intended use
 
-Binary classification of Windows host events collected through Wazuh/Sysmon into
-`BENIGN` and `MALICIOUS_APT`. The model is an integration feasibility experiment for the
-SecuraAI software project, not a replacement for Wazuh rules or analyst review.
+Binary classification of normalized SecuraAI security events into `BENIGN` and
+`MALICIOUS_APT`. The current temporal candidate focuses on Authentication, VPN/SSO and
+Application Access sequences using past-only 1/5/15/60-minute context. It is an integration
+feasibility experiment, not proof of production accuracy or a replacement for analyst review.
 
-## Dataset and protocol
+## Baseline Windows-APT dataset and protocol
 
 - Windows-APT 2025 v4, DOI `10.17632/b8fmtzvpy8.4`, CC BY 4.0.
 - 102,011 events: 63,792 MITRE-tagged and 38,219 untagged.
@@ -54,12 +59,22 @@ Linear SVM (`C=0.1`) was selected by Validation F2. On the untouched 20,558-even
 - The classifier score is not a calibrated attack probability.
 - External validation on separately collected SecuraAI/Wazuh data is required before deployment.
 
-## Integration requirement
+## Current integration contract
 
-Deploy first in shadow mode. Persist the model version and score beside existing SecuraAI
-detection evidence, compare results with analyst feedback, and do not automatically create or
-close incidents solely from this model output.
-# SecuraAI deployment findings
+This repository serves only the trained ML stage. SecuraAI Backend is responsible for periodically
+reading new Wazuh events, normalization, past-only 1/5/15/60-minute aggregation, second-stage
+Foundation-Sec review, persistence, retry/timeout handling and alert grouping.
+
+`POST /v1/predict` returns the model label, raw classifier score, locked decision threshold,
+escalation threshold and model version. The score is not a calibrated probability. The API does
+not ingest Wazuh directly and does not create an alert. Candidate v8 remains marked
+`EXPERIMENTAL_CONTROLLED_LAB_ONLY`; promotion requires independently reviewed operational data.
+
+# Historical deployment findings
+
+The following sections preserve the chronological evidence produced by earlier candidates. Terms
+such as “shadow mode”, “contribution zero” and “existing alert engine” describe the architecture at
+the date of each experiment and must not be read as the current Train-Model API contract.
 
 ## Controlled Wazuh evaluation (2026-11-02)
 
@@ -97,7 +112,7 @@ passed through Wazuh, SecuraAI Backend, PostgreSQL and the shadow model API and 
 FP 0, FN 0, TP 27. The resulting 100% is only boundary-test coverage over 101 controlled events,
 not an estimate of production accuracy or proof of generalization. The candidate remains
 `EXPERIMENTAL_SYNTHETIC_ONLY`, must contribute zero to alert decisions, and requires independently
-independently reviewed production Wazuh logs before promotion. No such production dataset is
+reviewed production Wazuh logs before promotion. No such production dataset is
 currently available in this project.
 
 The current v2 synthetic suite contains 3,000 sessions and approximately 24,600 events. It adds
@@ -221,6 +236,38 @@ The exported v6 artifact was then exercised through the live SecuraAI shadow pip
 isolated AUTH, VPN/SSO and APP_ACCESS runs (101 events). The predictions persisted by Backend were
 TN 74 / FP 0 / FN 0 / TP 27 and all referenced candidate v6. This verifies the selected artifact's
 integration behavior in the controlled lab; it does not change the production-accuracy limitation.
+
+## Multi-window candidate v7 (historical)
+
+Candidate v7 extended the temporal representation beyond the five-minute window. It introduced
+past-only counters for 1, 15 and 60 minutes while retaining the detailed five-minute counters.
+The purpose was to detect both short bursts and low-and-slow sequences without turning a window
+count into a fixed global attack rule. The artifact is retained under
+`artifacts-temporal-multiwindow-candidate/` for reproducibility and is not the latest candidate.
+
+## Temporal candidate v8 — current experimental artifact (2026-11-10)
+
+Candidate v8 is stored in `artifacts-temporal-1m5m15m60m-candidate/` with model version
+`securaai-temporal-1m5m15m60m-lab-candidate-v8`. It combines three controlled origins:
+
+- SecuraAI Authentication, VPN/SSO and Application Access scenarios;
+- controlled real Windows authentication lab sessions;
+- controlled multi-window scenarios.
+
+Every candidate uses the same temporal feature contract. Seven individual algorithms—Decision
+Tree, Complement Naive Bayes, Bagging, Random Forest, AdaBoost, Linear SVM and Logistic
+Regression—are tuned by five-fold `StratifiedGroupKFold` on Train. Weighted Soft Voting is also
+evaluated. Validation selects the model and threshold; Test remains locked until selection.
+
+Bagging was selected. The locked threshold and escalation threshold are both `0.5`. The controlled
+Validation result was TN 4,223 / FP 0 / FN 0 / TP 1,096; the controlled Test result was TN 4,404 /
+FP 0 / FN 0 / TP 1,061. The controlled-real Test subset was TN 17 / FP 0 / FN 0 / TP 8.
+
+These perfect values reflect controlled scenario/manifest boundaries and are **not production
+accuracy**. They do not prove performance on unseen organizations, arbitrary Wazuh rules, malware,
+ransomware, Linux or general network attacks. Candidate v8 requires the Backend to provide correct
+past-only 1/5/15/60-minute context. It is not approved as standalone evidence for automatic alert
+creation.
 
 ## RADAR family-held-out and SILRAD transfer findings (2026-11-03)
 

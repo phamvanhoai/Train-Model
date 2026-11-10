@@ -1,11 +1,16 @@
 # Lựa chọn dataset bổ sung cho SecuraAI
 
-Ngày kiểm tra: 2026-11-03.
+Ngày kiểm tra nguồn ban đầu: 2026-11-03. Cập nhật trạng thái pipeline: 2026-11-10.
 
 ## Quyết định
 
 Chọn **RADAR 2024** làm nguồn bổ sung chính và **SILRAD 2025** làm external test chuyên biệt
 ransomware. Cả hai đã được tải trong `data/downloads/`; không cần tải COMISET.
+
+Quyết định này chỉ áp dụng cho nhánh nghiên cứu **Windows endpoint/ransomware**. RADAR và SILRAD
+không được dùng để giả lập ground truth cho ba nghiệp vụ chính của SecuraAI là Authentication,
+VPN/SSO và Application Access. Candidate temporal hiện tại sử dụng scenario/lab có manifest riêng
+cho ba nghiệp vụ này.
 
 ### RADAR 2024 — nguồn bổ sung chính
 
@@ -57,6 +62,20 @@ RADAR tổng quát hóa và không điều chỉnh threshold dựa trên kết q
 - **WinMET**: execution trace CAPE, không phải Windows Event Log/Wazuh; khoảng 13 GB nén và hàng
   trăm GB sau giải nén.
 
+## Vai trò trong pipeline hiện tại
+
+Project hiện tách dữ liệu thành ba mục đích, không trộn tất cả vào một tập rồi chia ngẫu nhiên:
+
+1. **Windows-APT 2025:** baseline theo từng event để trình bày đầy đủ quy trình EDA, K-Fold,
+   Validation, Test và so sánh thuật toán.
+2. **RADAR/SILRAD:** thí nghiệm transfer cho endpoint/ransomware và minh họa domain shift.
+3. **SecuraAI temporal:** scenario Authentication, VPN/SSO, Application Access, Windows lab có
+   kiểm soát và scenario multi-window. Đây là dữ liệu của candidate v8.
+
+Candidate v8 không sử dụng raw dataset identity làm feature. Nó dùng `event_family`, `event_type`,
+đặc trưng thời gian/IP/port và context quá khứ 1, 5, 15, 60 phút. Split được giữ theo
+`scenario_id`; threshold chỉ chọn trên Validation.
+
 ## Khoảng trống còn lại
 
 Không tìm thấy một dataset công khai 2023–2026, nhỏ hơn 5 GB, đồng thời có raw Wazuh/Windows logs
@@ -64,8 +83,9 @@ và ground truth đầy đủ cho cả Authentication, VPN/SSO và Application A
 RADAR/SILRAD thành nhãn cho ba nghiệp vụ này. Hướng đúng là:
 
 1. dùng RADAR/SILRAD cho nhánh Windows endpoint/ransomware;
-2. giữ operational rules và temporal model hiện tại cho Auth/VPN/App ở shadow mode;
-3. tự thu controlled runs có manifest cho các ngưỡng Auth/VPN/App;
-4. khi có log production, lấy analyst feedback làm external ground truth.
+2. dùng candidate temporal cho Auth/VPN/App như một mô hình **controlled-lab experimental**;
+3. tiếp tục thu controlled runs có manifest và giữ nguyên session khi chia dữ liệu;
+4. khi có log operational, lấy analyst review làm external ground truth trước khi retrain hoặc
+   cho phép model ảnh hưởng trực tiếp đến alert.
 
 Không dùng label của model hoặc Wazuh rule tag làm ground truth độc lập.
