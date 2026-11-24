@@ -1,0 +1,783 @@
+{
+  "modelVersion": "securaai-temporal-1m5m15m60m-lab-candidate-v8",
+  "status": "EXPERIMENTAL_CONTROLLED_LAB_ONLY",
+  "selectedModel": "bagging",
+  "lockedThreshold": 0.5,
+  "escalationThreshold": 0.5,
+  "escalationSelection": {
+    "split": "VALIDATION",
+    "objective": "highest threshold preserving recall >= 0.98, capped at the locked model decision threshold"
+  },
+  "operationalGates": {},
+  "labels": {
+    "0": "BENIGN",
+    "1": "MALICIOUS_APT"
+  },
+  "scoreSemantics": "experimental temporal classifier score; not calibrated attack probability",
+  "features": [
+    "event_family_name",
+    "event_type_name",
+    "hour",
+    "is_after_hours",
+    "is_weekend",
+    "source_ip_private",
+    "destination_ip_private",
+    "destination_port",
+    "events_1m",
+    "failures_1m",
+    "events_5m",
+    "failed_logins_5m",
+    "access_denials_5m",
+    "vpn_failures_5m",
+    "distinct_accounts_5m",
+    "distinct_source_ips_5m",
+    "success_after_failure_5m",
+    "seconds_since_previous",
+    "events_15m",
+    "failures_15m",
+    "events_60m",
+    "failures_60m"
+  ],
+  "validation": {
+    "threshold": 0.5,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "f2": 1.0,
+    "falsePositiveRate": 0.0,
+    "confusionMatrix": {
+      "tn": 4223,
+      "fp": 0,
+      "fn": 0,
+      "tp": 1096
+    }
+  },
+  "allValidationCandidates": {
+    "decision_tree": {
+      "threshold": 1.0,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 4223,
+        "fp": 0,
+        "fn": 0,
+        "tp": 1096
+      }
+    },
+    "naive_bayes": {
+      "threshold": 1.0000000000000002,
+      "accuracy": 0.7939462304944539,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 4223,
+        "fp": 0,
+        "fn": 1096,
+        "tp": 0
+      }
+    },
+    "bagging": {
+      "threshold": 0.5,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 4223,
+        "fp": 0,
+        "fn": 0,
+        "tp": 1096
+      }
+    },
+    "random_forest": {
+      "threshold": 0.40569880757640586,
+      "accuracy": 0.9992479789434104,
+      "precision": 0.9981751824817519,
+      "recall": 0.9981751824817519,
+      "f1": 0.9981751824817519,
+      "f2": 0.9981751824817519,
+      "falsePositiveRate": 0.0004735969689793985,
+      "confusionMatrix": {
+        "tn": 4221,
+        "fp": 2,
+        "fn": 2,
+        "tp": 1094
+      }
+    },
+    "adaboost": {
+      "threshold": 0.5056608062137252,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 4223,
+        "fp": 0,
+        "fn": 0,
+        "tp": 1096
+      }
+    },
+    "linear_svm": {
+      "threshold": 0.015694565419662854,
+      "accuracy": 0.9774393683023125,
+      "precision": 0.9404332129963899,
+      "recall": 0.9507299270072993,
+      "f1": 0.9455535390199638,
+      "f2": 0.948652585579024,
+      "falsePositiveRate": 0.015628699976320153,
+      "confusionMatrix": {
+        "tn": 4157,
+        "fp": 66,
+        "fn": 54,
+        "tp": 1042
+      }
+    },
+    "logistic_regression": {
+      "threshold": 0.29734939410283395,
+      "accuracy": 0.9590148524158676,
+      "precision": 0.8424336973478939,
+      "recall": 0.9854014598540146,
+      "f1": 0.9083263246425568,
+      "f2": 0.953053300388281,
+      "falsePositiveRate": 0.04783329386691925,
+      "confusionMatrix": {
+        "tn": 4021,
+        "fp": 202,
+        "fn": 16,
+        "tp": 1080
+      }
+    },
+    "soft_voting": {
+      "threshold": 0.5,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 4223,
+        "fp": 0,
+        "fn": 0,
+        "tp": 1096
+      }
+    }
+  },
+  "trainCrossValidation": {
+    "method": "StratifiedGroupKFold",
+    "folds": 5,
+    "group": "scenario_id",
+    "selectionMetric": "F2",
+    "tieBreakPolicy": "validation recall, validation precision, mean Train-CV F2, lower CV std",
+    "candidates": {
+      "decision_tree": {
+        "bestParams": {
+          "model__max_depth": 16,
+          "model__min_samples_leaf": 2
+        },
+        "meanTrainF2": 0.9999677211103938,
+        "meanCvF2": 0.9999361226445226,
+        "stdCvF2": 0.0001277547109549637
+      },
+      "naive_bayes": {
+        "bestParams": {
+          "model__alpha": 0.1
+        },
+        "meanTrainF2": 0.5793271726612537,
+        "meanCvF2": 0.580613347251046,
+        "stdCvF2": 0.016812355492504212
+      },
+      "bagging": {
+        "bestParams": {
+          "model__max_samples": 0.7,
+          "model__n_estimators": 50
+        },
+        "meanTrainF2": 1.0,
+        "meanCvF2": 1.0,
+        "stdCvF2": 0.0
+      },
+      "random_forest": {
+        "bestParams": {
+          "model__max_depth": 12,
+          "model__min_samples_leaf": 5,
+          "model__n_estimators": 150
+        },
+        "meanTrainF2": 1.0,
+        "meanCvF2": 0.9987035076755728,
+        "stdCvF2": 0.0008254025982931904
+      },
+      "adaboost": {
+        "bestParams": {
+          "model__learning_rate": 0.5,
+          "model__n_estimators": 100
+        },
+        "meanTrainF2": 1.0,
+        "meanCvF2": 1.0,
+        "stdCvF2": 0.0
+      },
+      "linear_svm": {
+        "bestParams": {
+          "model__C": 5.0
+        },
+        "meanTrainF2": 0.9353096527106176,
+        "meanCvF2": 0.9334541433703677,
+        "stdCvF2": 0.007273745654509151
+      },
+      "logistic_regression": {
+        "bestParams": {
+          "model__C": 5.0
+        },
+        "meanTrainF2": 0.9361523509199795,
+        "meanCvF2": 0.9324628419979953,
+        "stdCvF2": 0.008090673356485717
+      },
+      "soft_voting": {
+        "components": [
+          "decision_tree",
+          "naive_bayes",
+          "bagging",
+          "random_forest",
+          "adaboost",
+          "logistic_regression"
+        ],
+        "weightsFromTrainCvF2": {
+          "decision_tree": 0.9999361226445226,
+          "naive_bayes": 0.580613347251046,
+          "bagging": 1.0,
+          "random_forest": 0.9987035076755728,
+          "adaboost": 1.0,
+          "logistic_regression": 0.9324628419979953
+        }
+      }
+    }
+  },
+  "test": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "f2": 1.0,
+    "falsePositiveRate": 0.0,
+    "confusionMatrix": {
+      "tn": 4404,
+      "fp": 0,
+      "fn": 0,
+      "tp": 1061
+    }
+  },
+  "testByOrigin": {
+    "SYNTHETIC_SCENARIO": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 4124,
+        "fp": 0,
+        "fn": 0,
+        "tp": 866
+      }
+    },
+    "CONTROLLED_REAL_WINDOWS_LAB": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 17,
+        "fp": 0,
+        "fn": 0,
+        "tp": 8
+      }
+    },
+    "CONTROLLED_MULTIWINDOW_SCENARIO": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 263,
+        "fp": 0,
+        "fn": 0,
+        "tp": 187
+      }
+    }
+  },
+  "testByScenario": {
+    "APP_DENIAL_BURST": {
+      "rows": 158,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 117,
+        "fp": 0,
+        "fn": 0,
+        "tp": 41
+      }
+    },
+    "APP_DISTRIBUTED_DENIAL": {
+      "rows": 150,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 108,
+        "fp": 0,
+        "fn": 0,
+        "tp": 42
+      }
+    },
+    "APP_LEGITIMATE_RETRY": {
+      "rows": 41,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 41,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "APP_LOW_AND_SLOW": {
+      "rows": 114,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 50,
+        "fp": 0,
+        "fn": 0,
+        "tp": 64
+      }
+    },
+    "APP_NORMAL_ACCESS": {
+      "rows": 507,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 507,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "APP_SUBTHRESHOLD_DENIAL": {
+      "rows": 391,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 391,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "APP_SUCCESS_AFTER_DENIAL": {
+      "rows": 228,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 144,
+        "fp": 0,
+        "fn": 0,
+        "tp": 84
+      }
+    },
+    "AUTH_ACCOUNT_ONLY_ATTACK": {
+      "rows": 90,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 32,
+        "fp": 0,
+        "fn": 0,
+        "tp": 58
+      }
+    },
+    "AUTH_ALIAS_BURST": {
+      "rows": 43,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 16,
+        "fp": 0,
+        "fn": 0,
+        "tp": 27
+      }
+    },
+    "AUTH_BRUTE_FORCE": {
+      "rows": 121,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 44,
+        "fp": 0,
+        "fn": 0,
+        "tp": 77
+      }
+    },
+    "AUTH_DISTRIBUTED_ATTACK": {
+      "rows": 101,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 36,
+        "fp": 0,
+        "fn": 0,
+        "tp": 65
+      }
+    },
+    "AUTH_LEGITIMATE_RETRY": {
+      "rows": 35,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 35,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "AUTH_LOW_AND_SLOW": {
+      "rows": 108,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 50,
+        "fp": 0,
+        "fn": 0,
+        "tp": 58
+      }
+    },
+    "AUTH_MISSING_CONTEXT": {
+      "rows": 350,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 350,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "AUTH_MULTI_USER_NOISE": {
+      "rows": 593,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 593,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "AUTH_NORMAL": {
+      "rows": 196,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 196,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "AUTH_PASSWORD_SPRAY": {
+      "rows": 90,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 28,
+        "fp": 0,
+        "fn": 0,
+        "tp": 62
+      }
+    },
+    "AUTH_SINGLE_TYPO": {
+      "rows": 216,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 216,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "AUTH_SUBTHRESHOLD_BURST": {
+      "rows": 302,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 302,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "AUTH_SUCCESS_AFTER_FAILURE": {
+      "rows": 102,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 28,
+        "fp": 0,
+        "fn": 0,
+        "tp": 74
+      }
+    },
+    "REAL_WINDOWS_BENIGN_FAILURES": {
+      "rows": 5,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 5,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "REAL_WINDOWS_PASSWORD_SPRAY": {
+      "rows": 20,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 12,
+        "fp": 0,
+        "fn": 0,
+        "tp": 8
+      }
+    },
+    "VPN_ALIAS_BURST": {
+      "rows": 140,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 64,
+        "fp": 0,
+        "fn": 0,
+        "tp": 76
+      }
+    },
+    "VPN_DISTRIBUTED_ATTACK": {
+      "rows": 180,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 76,
+        "fp": 0,
+        "fn": 0,
+        "tp": 104
+      }
+    },
+    "VPN_FAILURE_BURST": {
+      "rows": 128,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 56,
+        "fp": 0,
+        "fn": 0,
+        "tp": 72
+      }
+    },
+    "VPN_LEGITIMATE_RETRY": {
+      "rows": 37,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 37,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "VPN_LOW_AND_SLOW": {
+      "rows": 115,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 50,
+        "fp": 0,
+        "fn": 0,
+        "tp": 65
+      }
+    },
+    "VPN_NORMAL": {
+      "rows": 522,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 522,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    },
+    "VPN_PASSWORD_SPRAY": {
+      "rows": 140,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f2": 1.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 56,
+        "fp": 0,
+        "fn": 0,
+        "tp": 84
+      }
+    },
+    "VPN_SUBTHRESHOLD_BURST": {
+      "rows": 242,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "f2": 0.0,
+      "falsePositiveRate": 0.0,
+      "confusionMatrix": {
+        "tn": 242,
+        "fp": 0,
+        "fn": 0,
+        "tp": 0
+      }
+    }
+  },
+  "limitations": [
+    "trained on controlled synthetic SecuraAI scenarios plus controlled real Windows lab telemetry",
+    "labels are scenario-manifest ground truth with rule-defined decision boundaries",
+    "high synthetic metrics are not production accuracy",
+    "requires past-only 1-minute, 5-minute, 15-minute and 60-minute context at inference",
+    "not approved to create alerts"
+  ]
+}

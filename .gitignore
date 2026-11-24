@@ -5,6 +5,10 @@ __pycache__/
 *.py[cod]
 data/
 artifacts*/
+!artifacts-temporal-1m5m15m60m-candidate/
+artifacts-temporal-1m5m15m60m-candidate/*
+!artifacts-temporal-1m5m15m60m-candidate/model.joblib
+!artifacts-temporal-1m5m15m60m-candidate/model_metadata.json
 reports*/
 .env
 .idea/
